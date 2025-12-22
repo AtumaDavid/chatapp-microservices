@@ -4,7 +4,22 @@ Compact documentation for the Slack/Discord-style chat microservice.
 
 ## Project Overview
 
-This repository contains a microservice that provides core realtime chat functionality similar to Slack or Discord. It uses RabbitMQ for message brokering between services, enabling scalable, decoupled communication. The service is intended to be part of a larger system (API gateway, auth service, frontend, etc.).
+This repository is a monorepo containing multiple microservices and shared packages for a Slack/Discord-style chat application. It uses RabbitMQ for message brokering between services, enabling scalable, decoupled communication. The services are intended to be part of a larger system (API gateway, auth service, frontend, etc.).
+
+### Monorepo Structure
+
+The repository is organized as a pnpm workspace with TypeScript project references for efficient builds and shared types. Key packages and services:
+
+- `packages/common` — Shared code, types, and utilities used by all services. This package includes:
+  - Schema validation with [`zod`](https://github.com/colinhacks/zod)
+  - Logging utilities with [`pino`](https://getpino.io/)
+  - Common types and helpers for consistent data handling across microservices
+- `services/user-service` — User management (registration, profiles, etc.)
+- `services/chat-service` — Core chat logic (channels, messages, history)
+- `services/gateway-service` — API gateway or WebSocket gateway for client connections
+- `services/auth-service` — Authentication and authorization logic
+
+Each service/package is a TypeScript project and can be developed/tested independently.
 
 ## Key Features
 
@@ -26,6 +41,10 @@ This repository contains a microservice that provides core realtime chat functio
 - Node.js / TypeScript
 - Package manager: `pnpm`
 - Runtime: Docker (optional)
+
+## TypeScript Project References
+
+The root `tsconfig.json` uses project references to enable incremental builds and type-checking across all services and shared packages. See the `references` array in `tsconfig.json` for the current list.
 
 ## Dev tooling (installed)
 
