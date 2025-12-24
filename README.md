@@ -80,7 +80,11 @@ This monorepo is organized for scalable microservice development. Here’s how t
 - **env.ts**: Exports `createEnv`, a utility to validate environment variables using zod schemas. Throws an error if validation fails, ensuring services only start with correct configuration.
 - **index.ts**: Re-exports zod, logger, and env utilities for easy import in services.
 
-### Auth Service Example
+- **src/config/env.ts**: Loads environment variables (with dotenv), defines and validates them using zod and `createEnv`. Example schema includes `NODE_ENV` and `AUTH_SERVICE_PORT`.
+- **src/utils/logger.ts**: Creates a logger instance for the auth service using `createLogger` from common.
+- **src/app.ts**: Sets up an Express app with a `/health` endpoint for health checks.
+- **src/index.ts**: Main entry point. Creates the app, starts the HTTP server on the validated port, and logs startup or errors.
+  +- **Graceful Shutdown Logic**: The auth service includes a shutdown function that listens for termination signals (SIGINT, SIGTERM). When triggered, it logs the shutdown process, closes the HTTP server, and exits the process cleanly. This structure is ready for you to add async cleanup tasks (like closing database connections) in the future, making the service robust and production-ready.
 
 - **src/config/env.ts**: Loads environment variables (with dotenv), defines and validates them using zod and `createEnv`. Example schema includes `NODE_ENV` and `AUTH_SERVICE_PORT`.
 - **src/utils/logger.ts**: Creates a logger instance for the auth service using `createLogger` from common.

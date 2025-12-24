@@ -21,10 +21,13 @@
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@chatapp/common": "workspace:^1.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "helmet": "^8.1.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6"
   }
 }
