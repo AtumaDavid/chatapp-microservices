@@ -6,7 +6,45 @@ Compact documentation for the Slack/Discord-style chat microservice.
 
 This repository is a monorepo containing multiple microservices and shared packages for a Slack/Discord-style chat application. It uses RabbitMQ for message brokering between services, enabling scalable, decoupled communication. The services are intended to be part of a larger system (API gateway, auth service, frontend, etc.).
 
-### Creating a New Package (e.g., common)
+### Using Shared Code Across Microservices
+
+In a microservice monorepo, shared code (like types, utilities, or validation logic) is placed in a common package (e.g., `packages/common`). This allows all services to reuse the same logic and stay consistent.
+
+#### Why Build the Common Package?
+
+The `common` package is written in TypeScript. Before other services can use its code, it must be compiled to JavaScript. Run:
+
+```bash
+cd packages/common
+pnpm run build
+```
+
+This generates the `dist/` folder with compiled code that other services can import.
+
+#### Why Use `"@chatapp/common": "workspace:^1.0.0"` in package.json?
+
+This line in a service's `package.json` (e.g., `services/auth-service/package.json`) tells pnpm to use the local version of the `common` package from your monorepo, not a remote npm version. This ensures you always use the latest shared code from your workspace.
+
+Example:
+
+```json
+"dependencies": {
+  "@chatapp/common": "workspace:^1.0.0"
+}
+```
+
+#### Steps for Adding Common to a Service
+
+1. Build the common package: `pnpm run build` inside `packages/common`.
+2. Add the dependency in your service's `package.json` as above.
+3. Run `pnpm install` at the root to link everything.
+4. Import and use shared code in your service:
+
+```typescript
+import { createLogger } from '@chatapp/common';
+```
+
+Repeat these steps for any new service that needs to use shared code.
 
 To add a new shared package (like `common`), navigate into the desired folder and run:
 
@@ -32,7 +70,31 @@ The repository is organized as a pnpm workspace with TypeScript project referenc
 
 Each service/package is a TypeScript project and can be developed/tested independently.
 
-## Installed Packages
+## Codebase Overview
+
+This monorepo is organized for scalable microservice development. Here’s how the main parts work together:
+
+### Common Package (`@chatapp/common`)
+
+- **logger.ts**: Exports `createLogger`, a utility that uses `pino` and `pino-pretty` for structured and pretty logging. In development, logs are colorized and human-readable; in production, logs are structured for performance and integration.
+- **env.ts**: Exports `createEnv`, a utility to validate environment variables using zod schemas. Throws an error if validation fails, ensuring services only start with correct configuration.
+- **index.ts**: Re-exports zod, logger, and env utilities for easy import in services.
+
+### Auth Service Example
+
+- **src/config/env.ts**: Loads environment variables (with dotenv), defines and validates them using zod and `createEnv`. Example schema includes `NODE_ENV` and `AUTH_SERVICE_PORT`.
+- **src/utils/logger.ts**: Creates a logger instance for the auth service using `createLogger` from common.
+- **src/app.ts**: Sets up an Express app with a `/health` endpoint for health checks.
+- **src/index.ts**: Main entry point. Creates the app, starts the HTTP server on the validated port, and logs startup or errors.
+
+### Key Practices
+
+- All services share code from `@chatapp/common` for logging and environment validation.
+- `pino-pretty` is used for readable logs in development.
+- Environment variables are strictly validated at startup for safety.
+- The structure is modular and ready for scaling with more microservices.
+
+---
 
 ### Root (Monorepo)
 
@@ -52,23 +114,35 @@ Each service/package is a TypeScript project and can be developed/tested indepen
 **Dependencies:**
 
 - pino
+- pino-pretty
 - zod
 
 **Dev Dependencies:**
 
 (none)
 
+### services/auth-service
+
+**Dependencies:**
+
+- @chatapp/common
+- dotenv
+- express
+
+**Dev Dependencies:**
+(none)
+
 ---
 
 ## Common Package Utilities
 
-### Logger (`pino`)
+### Logger (`pino` & `pino-pretty`)
 
-The `common` package provides a logger utility using [pino](https://getpino.io/), a fast and low-overhead Node.js logging library.
+The `common` package provides a logger utility using [pino](https://getpino.io/), a fast and low-overhead Node.js logging library. For development, it uses [pino-pretty](https://github.com/pinojs/pino-pretty) to format logs in a readable, colorized way.
 
 **How it works:**
 
-- The `createLogger` function (see `src/logger.ts`) creates a logger instance. In development, it uses `pino-pretty` for readable, colorized logs. In production, it outputs structured logs for performance and integration with log management tools.
+- The `createLogger` function (see `src/logger.ts`) creates a logger instance. In development, it uses `pino-pretty` for readable, colorized logs (make sure `pino-pretty` is installed as a dependency). In production, it outputs structured logs for performance and integration with log management tools.
 - You can set options like the logger name and log level.
 
 **Example usage:**
