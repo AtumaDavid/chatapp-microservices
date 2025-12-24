@@ -6,6 +6,17 @@ Compact documentation for the Slack/Discord-style chat microservice.
 
 This repository is a monorepo containing multiple microservices and shared packages for a Slack/Discord-style chat application. It uses RabbitMQ for message brokering between services, enabling scalable, decoupled communication. The services are intended to be part of a larger system (API gateway, auth service, frontend, etc.).
 
+### Creating a New Package (e.g., common)
+
+To add a new shared package (like `common`), navigate into the desired folder and run:
+
+```bash
+cd packages/common
+pnpm init
+```
+
+This will create a new `package.json` for the package. You can then add dependencies (e.g., `pnpm add zod pino --filter common`) and start building shared code.
+
 ### Monorepo Structure
 
 The repository is organized as a pnpm workspace with TypeScript project references for efficient builds and shared types. Key packages and services:
@@ -20,6 +31,80 @@ The repository is organized as a pnpm workspace with TypeScript project referenc
 - `services/auth-service` — Authentication and authorization logic
 
 Each service/package is a TypeScript project and can be developed/tested independently.
+
+## Installed Packages
+
+### Root (Monorepo)
+
+**Dev Dependencies:**
+
+- @eslint/js
+- @types/node
+- @typescript-eslint/eslint-plugin
+- @typescript-eslint/parser
+- eslint
+- prettier
+- tsx
+- typescript
+
+### packages/common
+
+**Dependencies:**
+
+- pino
+- zod
+
+**Dev Dependencies:**
+
+(none)
+
+---
+
+## Common Package Utilities
+
+### Logger (`pino`)
+
+The `common` package provides a logger utility using [pino](https://getpino.io/), a fast and low-overhead Node.js logging library.
+
+**How it works:**
+
+- The `createLogger` function (see `src/logger.ts`) creates a logger instance. In development, it uses `pino-pretty` for readable, colorized logs. In production, it outputs structured logs for performance and integration with log management tools.
+- You can set options like the logger name and log level.
+
+**Example usage:**
+
+```typescript
+import { createLogger } from '@chatapp/common';
+const logger = createLogger({ name: 'chat-service' });
+logger.info('Service started');
+```
+
+### Environment Validation (`zod`)
+
+The `common` package uses [zod](https://github.com/colinhacks/zod) for environment variable validation.
+
+**How it works:**
+
+- The `createEnv` function (see `src/env.ts`) takes a Zod schema and validates environment variables against it. If validation fails, it throws an error with details.
+- This ensures your service only starts with all required environment variables present and correctly typed.
+
+**Example usage:**
+
+```typescript
+import { z } from 'zod';
+import { createEnv } from '@chatapp/common';
+
+const envSchema = z.object({
+  PORT: z.string().transform(Number),
+  NODE_ENV: z.enum(['development', 'production']),
+});
+
+const env = createEnv(envSchema, { serviceName: 'chat-service' });
+```
+
+---
+
+---
 
 ## Key Features
 
