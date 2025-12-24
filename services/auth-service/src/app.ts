@@ -1,6 +1,7 @@
 import express, { type Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import { errorHandler } from './middleware/error-handler';
 
 export const createApp = (): Application => {
   const app = express();
@@ -22,6 +23,8 @@ export const createApp = (): Application => {
   // app.get('/health', (_req, res) => {
   //   res.status(200).send('Auth Service is healthy');
   // });
+
+  app.use(errorHandler);
 
   return app;
 };
