@@ -81,12 +81,42 @@ Environment variables
 
 - Typical variables: `PORT`, `DATABASE_URL`, `JWT_SECRET`, `RABBITMQ_URL`, `REDIS_URL`.
 
-Docker (optional)
+Docker (development)
 
 - RabbitMQ for local development:
 
 ```bash
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
+
+- MySQL (used by `auth-service`):
+
+```bash
+# Example: start a MySQL container for the auth service
+docker run -d --name auth-mysql \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=auth_db \
+  -p 3306:3306 \
+  mysql:8
+```
+
+- Adminer (web UI for databases):
+
+```bash
+docker run -d --name adminer -p 8080:8080 adminer
+```
+
+- Start everything with `docker compose` (if you prefer):
+
+```bash
+docker compose up -d
+```
+
+- Stop and remove example containers:
+
+```bash
+docker stop rabbitmq auth-mysql adminer
+docker rm rabbitmq auth-mysql adminer
 ```
 
 Notes
