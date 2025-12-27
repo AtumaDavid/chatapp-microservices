@@ -1,3 +1,4 @@
+// TypeScript utility for validating environment variables using Zod schemas
 import type { ZodObject, ZodRawShape } from 'zod';
 
 interface EnvOptions {
