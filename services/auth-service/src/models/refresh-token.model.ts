@@ -4,7 +4,7 @@ import { UserCredentials } from './user-credentials.model';
 
 export interface RefreshTokenAttributes {
   id: string;
-  userId: number;
+  userId: string;
   tokenId: string;
   expiresAt: Date;
   createdAt?: Date;
@@ -21,7 +21,7 @@ export class RefreshToken
   implements RefreshTokenAttributes
 {
   declare id: string;
-  declare userId: number;
+  declare userId: string;
   declare tokenId: string;
   declare expiresAt: Date;
   declare createdAt: Date;

@@ -2,7 +2,7 @@ import { sequelize } from '@/DB/sequelize';
 import { DataTypes, Model, type Optional } from 'sequelize';
 
 export interface UserCredentialsAttributes {
-  id: number;
+  id: string;
   email: string;
   displayName: string;
   passwordHash: string;
@@ -19,7 +19,7 @@ export class UserCredentials
   extends Model<UserCredentialsAttributes, UserCredentialsCreationAttributes>
   implements UserCredentialsAttributes
 {
-  declare id: number;
+  declare id: string;
   declare email: string;
   declare displayName: string;
   declare passwordHash: string;

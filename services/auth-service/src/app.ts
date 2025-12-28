@@ -2,6 +2,7 @@ import express, { type Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { errorHandler } from './middleware/error-handler';
+import { registerRoute } from './routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -13,8 +14,13 @@ export const createApp = (): Application => {
       credentials: true,
       // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       // allowedHeaders: ['Content-Type', 'Authorization'],
-    })
+    }),
   );
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  registerRoute(app);
 
   app.use((_req, res) => {
     res.status(404).send('Not Found');

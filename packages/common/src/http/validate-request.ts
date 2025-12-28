@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { HttpError } from '../errors/http-error';
 import type { NextFunction, Request, Response } from 'express';
 import type { ZodError, ZodType, ZodObject } from 'zod';
-import { issue } from 'zod/v4/core/util.cjs';
+// import { issue } from 'zod/v4/core/util.cjs';
 
 type Schema = ZodType<any, any, any> | ZodObject<any>;
 type ParamsRecord = Record<string, unknown>;
@@ -45,7 +45,7 @@ export const validateRequest = (schemas: RequestValidationSchemas) => {
         return next(
           new HttpError(400, 'Request validation failed', {
             issues: formattedError(error),
-          })
+          }),
         );
       }
       return next(error);
