@@ -134,16 +134,120 @@ Notes
 
 Note: `.env` and `.env.*` are ignored by git; `.env.example` files are intentionally committed.
 
+---
+
+## Internal service authentication 🔒
+
+This repo protects internal service-to-service requests (e.g., **gateway → auth-service**) using a
+shared internal token and a simple header check.
+
+- Header: `x-internal-token`
+- Gateway environment variable: `INTERNAL_API_KEY` (used when proxying requests to auth-service)
+- Auth service environment variable: `INTERNAL_AUTH_TOKEN` (used by middleware
+  `createInternalAuthMiddleware`)
+
+How it works:
+
+- The gateway attaches the `x-internal-token` header to outgoing requests (see
+  `services/gateway-service/src/services/auth-proxy.service.ts`).
+- The auth service validates that header using the middleware exposed from `packages/common`.
+
+Recommended key format and generation:
+
+- Use a long, high-entropy secret. Example pattern used in this project:
+  `auth-gateway-internal_v1_<hex>`
+- Generate with OpenSSL or Node's crypto:
+
+```bash
+# OpenSSL: 32 bytes -> 64 hex chars
+openssl rand -hex 32
+
+# Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Security best practices:
+
+- **Do not commit `.env` files** with real secrets into source control. Use `.env.example` for
+  examples.
+- Rotate keys periodically and store secrets in a secure secret manager (Vault, AWS Secrets Manager,
+  GitHub Secrets, etc.) for production deployments.
+- Restrict internal traffic where possible (private networks, VPCs, or API gateways).
+
+> Note: after updating `.env`, restart the affected service(s) so the new values are loaded.
+
+---
+
+## Running services locally ▶️
+
+1. Install dependencies and build shared packages:
+
+```bash
+pnpm install
+cd packages/common
+pnpm run build
+```
+
+2. Run individual services (from the repo root or service folder):
+
+```bash
+# Start auth service (dev, with auto-reload)
+cd services/auth-service
+pnpm run dev
+
+# Start gateway service (dev, with auto-reload)
+cd ../gateway-service
+pnpm run dev
+```
+
+3. Default ports used by services (change via `.env`):
+
+- Gateway: `GATEWAY_PORT` (default: `4000`)
+- Auth service: `AUTH_SERVICE_PORT` (default: `4003`)
+
+You can also bring up supporting services (MySQL, RabbitMQ) via Docker Compose as described above.
+
+---
+
 ## Installed Packages (summary)
 
 - **Root (dev tools)**: `@eslint/js`, `@types/node`, `@typescript-eslint/*`, `eslint`, `prettier`,
   `tsx`, `typescript`
 - **packages/common**: `express`, `pino`, `pino-pretty`, `zod` (plus dev `@types/express`)
-- **services/auth-service**: `@chatapp/common` (workspace), `cors`, `dotenv`, `express`, `helmet`,
-  `sequelize` (plus dev `@types/cors`, `@types/express`)
+- **services/auth-service**: `@chatapp/common` (workspace), `amqplib`, `cors`, `dotenv`, `express`,
+  `helmet`, `sequelize` (plus dev `@types/amqplib`, `@types/cors`, `@types/express`)
 
 Note: `services/auth-service` uses MySQL in this repo (see `services/auth-service/.env.example` and
 `AUTH_DB_URL`).
+
+---
+
+## Notable packages explained 🧩
+
+- **amqplib** (used by `services/auth-service`): a low-level Node.js client for AMQP 0-9-1
+  (RabbitMQ). It exposes connections and channels, and supports publishing and consuming messages.
+  Typical usage patterns in microservices:
+  - Create a single long-lived connection per process and one or more channels per worker.
+  - Assert exchanges/queues at startup, publish messages (persistent/durable) and consume with
+    manual acknowledgements (ack/nack) to ensure reliability.
+  - Use `prefetch` to control in-flight messages and avoid overloading consumers.
+  - For production, consider `amqp-connection-manager` (or similar) to handle reconnection and
+    channel recovery automatically.
+
+- **@types/amqplib**: TypeScript type definitions to improve developer experience when working with
+  `amqplib` in this TypeScript codebase.
+
+Quick notes for local development with RabbitMQ:
+
+- The repo includes a `docker-compose.yml` entry for RabbitMQ (service `rabbitmq`). You can bring it
+  up with `docker compose up -d` or use the simple `docker run` command shown earlier in this
+  README.
+- When writing producers/consumers: keep channels short-lived for individual tasks, ensure durable
+  queues/exchanges when message durability is needed, and always handle errors/edge cases (e.g.,
+  reconnection, message retries, poison messages).
+
+If you'd like, I can add a short example producer/consumer snippet to `services/auth-service` that
+shows connecting, asserting a queue, publishing, and consuming messages.
 
 Contributing
 

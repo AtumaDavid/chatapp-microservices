@@ -1,4 +1,16 @@
 services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: chatapp-rabbitmq
+    restart: always
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    networks:
+      - chatapp-network
   auth-db:
     image: mysql:8.0
     container_name: chatapp-auth-db
