@@ -18,6 +18,7 @@
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@chatapp/common": "workspace:^1.0.0",
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
