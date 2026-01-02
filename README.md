@@ -55,17 +55,22 @@ cd packages/common
 pnpm run build
 ```
 
-3. Run a service (example: auth-service)
+3. Run a service (examples: auth-service, user-service)
 
 ```bash
+# Auth service (dev, with auto-reload)
 cd services/auth-service
+pnpm run dev
+
+# User service (dev, with auto-reload)
+cd services/user-service
 pnpm run dev
 ```
 
 Repository layout
 
 - `packages/common` — shared TypeScript utilities (logger, env validation, types)
-- `services/*` — independent microservices (e.g., `auth-service`, `chat-service`, `gateway-service`)
+- `services/*` — independent microservices (e.g., `auth-service`, `gateway-service`, `user-service`)
 
 Where to configure each service
 
@@ -79,7 +84,9 @@ Running as a workspace
 
 Environment variables
 
-- Typical variables: `PORT`, `DATABASE_URL`, `JWT_SECRET`, `RABBITMQ_URL`, `REDIS_URL`.
+- Typical variables: `PORT`, `DATABASE_URL`, `JWT_SECRET`, `RABBITMQ_URL`, `REDIS_URL`, and
+  service-specific vars such as `USER_SERVICE_PORT`, `USER_DB_URL`, `USER_DB_SSL`, and
+  `INTERNAL_AUTH_TOKEN`.
 
 Docker (development)
 
@@ -98,6 +105,18 @@ docker run -d --name auth-mysql \
   -e MYSQL_DATABASE=auth_db \
   -p 3306:3306 \
   mysql:8
+```
+
+- PostgreSQL (used by `user-service`):
+
+```bash
+# Example: start a PostgreSQL container for the user service
+docker run -d --name user-postgres \
+  -e POSTGRES_USER=chatapp_user_user \
+  -e POSTGRES_PASSWORD=chatapp_user_password \
+  -e POSTGRES_DB=chatapp_user_service \
+  -p 5433:5432 \
+  postgres:15
 ```
 
 - Adminer (web UI for databases):
@@ -131,6 +150,7 @@ Notes
   running a service:
   - `/.env.example` — workspace-level example values
   - `services/auth-service/.env.example` — auth-service-specific example (uses MySQL by default)
+  - `services/user-service/.env` — user-service-specific example (uses PostgreSQL by default)
 
 Note: `.env` and `.env.*` are ignored by git; `.env.example` files are intentionally committed.
 
@@ -198,12 +218,17 @@ pnpm run dev
 # Start gateway service (dev, with auto-reload)
 cd ../gateway-service
 pnpm run dev
+
+# Start user service (dev, with auto-reload)
+cd ../user-service
+pnpm run dev
 ```
 
 3. Default ports used by services (change via `.env`):
 
 - Gateway: `GATEWAY_PORT` (default: `4000`)
 - Auth service: `AUTH_SERVICE_PORT` (default: `4003`)
+- User service: `USER_SERVICE_PORT` (default: `4001`)
 
 You can also bring up supporting services (MySQL, RabbitMQ) via Docker Compose as described above.
 
@@ -216,6 +241,9 @@ You can also bring up supporting services (MySQL, RabbitMQ) via Docker Compose a
 - **packages/common**: `express`, `pino`, `pino-pretty`, `zod` (plus dev `@types/express`)
 - **services/auth-service**: `@chatapp/common` (workspace), `amqplib`, `cors`, `dotenv`, `express`,
   `helmet`, `sequelize` (plus dev `@types/amqplib`, `@types/cors`, `@types/express`)
+- **services/user-service**: `@chatapp/common` (workspace), `express`, `sequelize` (ORM — typically
+  used with PostgreSQL here), `dotenv`, `cors`, `helmet` (plus dev `@types/cors`, `@types/express`,
+  `@types/helmet`)
 
 Note: `services/auth-service` uses MySQL in this repo (see `services/auth-service/.env.example` and
 `AUTH_DB_URL`).
