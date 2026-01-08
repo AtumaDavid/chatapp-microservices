@@ -2,9 +2,12 @@ import { createApp } from './app';
 import { createServer } from 'http';
 import { env } from './config/env';
 import { logger } from './utils/logger';
+import { initializeDatabase } from './db/sequelize';
 
 const main = async () => {
   try {
+    await initializeDatabase();
+
     const app = createApp();
     const server = createServer(app);
 

@@ -242,8 +242,8 @@ You can also bring up supporting services (MySQL, RabbitMQ) via Docker Compose a
 - **services/auth-service**: `@chatapp/common` (workspace), `amqplib`, `cors`, `dotenv`, `express`,
   `helmet`, `sequelize` (plus dev `@types/amqplib`, `@types/cors`, `@types/express`)
 - **services/user-service**: `@chatapp/common` (workspace), `express`, `sequelize` (ORM — typically
-  used with PostgreSQL here), `dotenv`, `cors`, `helmet` (plus dev `@types/cors`, `@types/express`,
-  `@types/helmet`)
+  used with PostgreSQL here), `dotenv`, `cors`, `helmet`, `amqplib` (plus dev `@types/cors`,
+  `@types/express`, `@types/helmet`, `@types/amqplib`)
 
 Note: `services/auth-service` uses MySQL in this repo (see `services/auth-service/.env.example` and
 `AUTH_DB_URL`).
@@ -252,9 +252,11 @@ Note: `services/auth-service` uses MySQL in this repo (see `services/auth-servic
 
 ## Notable packages explained 🧩
 
-- **amqplib** (used by `services/auth-service`): a low-level Node.js client for AMQP 0-9-1
-  (RabbitMQ). It exposes connections and channels, and supports publishing and consuming messages.
-  Typical usage patterns in microservices:
+- **amqplib** (used by `services/auth-service` and `services/user-service`): a low-level Node.js
+  client for AMQP 0-9-1 (RabbitMQ). It exposes connections and channels, and supports publishing and
+  consuming messages. In this repo the auth service publishes events to the `auth.event` exchange
+  (routing key `auth.user.registered`), and the user service consumes that event to create or sync a
+  local user record. Typical usage patterns in microservices:
   - Create a single long-lived connection per process and one or more channels per worker.
   - Assert exchanges/queues at startup, publish messages (persistent/durable) and consume with
     manual acknowledgements (ack/nack) to ensure reliability.
@@ -263,9 +265,13 @@ Note: `services/auth-service` uses MySQL in this repo (see `services/auth-servic
     channel recovery automatically.
 
 - **@types/amqplib**: TypeScript type definitions to improve developer experience when working with
-  `amqplib` in this TypeScript codebase.
+  `amqplib` in this TypeScript codebase. Auth events — how services use RabbitMQ
 
-Quick notes for local development with RabbitMQ:
+- Exchange: `auth.event`
+- Important routing key: `auth.user.registered` — published by `auth-service` when a new user
+  registers. `user-service` can consume this event to create or sync a local user record (see
+  `packages/common/src/events/auth-event.ts` for payload shape). Quick notes for local development
+  with RabbitMQ:
 
 - The repo includes a `docker-compose.yml` entry for RabbitMQ (service `rabbitmq`). You can bring it
   up with `docker compose up -d` or use the simple `docker run` command shown earlier in this
