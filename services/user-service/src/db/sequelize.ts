@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { env } from '../config/env.js';
 import { logger } from '@/utils/logger.js';
+import { initUserModel } from './models/user.model';
 
 export const sequelize = new Sequelize(env.USER_DB_URL, {
   dialect: 'postgres',
@@ -17,7 +18,14 @@ export const connectToUserDB = async (): Promise<void> => {
 };
 
 export const initializeDatabase = async (): Promise<void> => {
-  connectToUserDB();
+  await connectToUserDB();
+
+  // Register models before syncing so Sequelize can create/update tables
+  initUserModel(sequelize);
+
+  const syncOptions = env.NODE_ENV === 'development' ? { alter: true } : {};
+  await sequelize.sync(syncOptions);
+  logger.info('User Service Database synchronized successfully.');
 };
 
 export const closeUserDBConnection = async (): Promise<void> => {
