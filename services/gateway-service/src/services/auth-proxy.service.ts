@@ -78,9 +78,9 @@ export const authProxyService = {
     }
   },
 
-  async login(payload: LoginPayload): Promise<AuthResponse> {
+  async login(payload: LoginPayload): Promise<AuthTokens> {
     try {
-      const response = await client.post<AuthResponse>('/auth/login', payload, authHeader);
+      const response = await client.post<AuthTokens>('/auth/login', payload, authHeader);
       return response.data;
     } catch (error) {
       return handleAxiosError(error);
